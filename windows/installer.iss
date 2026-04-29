@@ -1,3 +1,4 @@
+#define MyAppVersion "1.0.0"
 [Setup]
 ; AppId unik untuk aplikasi ini agar Windows bisa membedakan instalasinya
 AppId={{B2F6D1F1-A821-4F41-A3C9-183FBE6348D6}
