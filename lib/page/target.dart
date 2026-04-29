@@ -960,8 +960,8 @@ class _TargetState extends ConsumerState<Target> {
                 spacing: 20,
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (true)
-                    // if (!_isEditMode)
+                  // if (true)
+                  if (!_isEditMode)
                     // ButtonCustome(
                     //   ontap: _resetAllFields,
                     //   text: "Clear",
