@@ -1,0 +1,46 @@
+name: Build and Release Windows App
+
+on:
+  push:
+    tags:
+      - 'v*' # Workflow ini HANYA jalan kalau Anda push tag seperti 'v1.0.0', 'v1.0.1', dst.
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          flutter-version: '3.x'
+
+      - name: Install Dependencies
+        run: flutter pub get
+
+      - name: Build Windows App
+        run: flutter build windows --release
+
+      - name: Extract version from tag
+        id: get_version
+        # Mengambil versi (misal: v1.0.0 menjadi 1.0.0) untuk dimasukkan ke installer
+        run: echo "VERSION=${GITHUB_REF_NAME#v}" >> $env:GITHUB_ENV
+
+      - name: Compile Installer with Inno Setup
+        # Menjalankan Inno Setup Compiler yang memang sudah terinstall bawaan di windows-latest GitHub
+        run: iscc /DMyAppVersion=${{ env.VERSION }} windows/installer.iss
+
+      - name: Upload Release to GitHub
+        uses: softprops/action-gh-release@v2
+        with:
+          files: windows/Output/OperationCore-Setup.exe
+          name: Operation Core ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

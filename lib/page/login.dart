@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:operationcore2/providers/auth_provider.dart';
+import 'package:operationcore2/utils/auto_updater.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 String hashPassword(String password) {
@@ -44,6 +45,9 @@ class _bodyState extends ConsumerState<body> {
   void initState() {
     super.initState();
     _loadCredentials();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AutoUpdater.checkForUpdates(context);
+    });
   }
 
   Future<void> _loadCredentials() async {

@@ -49,6 +49,9 @@ dependencies:
   excel: ^4.0.5
   file_picker: ^8.1.5
   material_charts: ^0.0.39
+  dio: ^5.9.2
+  package_info_plus: ^9.0.1
+  path_provider: ^2.1.5
   # firebase_core: ^
 
 dev_dependencies:
