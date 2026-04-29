@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "641864841613",
+    "project_id": "performance-monitoring-44f1e",
+    "storage_bucket": "performance-monitoring-44f1e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:641864841613:android:0c266a7d653c2d554065c4",
+        "android_client_info": {
+          "package_name": "com.example.operationcore2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBQANoR3lFTY2g6ud4xYUzG2iSfhfMGL1U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
