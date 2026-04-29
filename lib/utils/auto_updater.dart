@@ -107,8 +107,13 @@ class _UpdateDialogUIState extends State<_UpdateDialogUI> {
       );
 
       // SETELAH DOWNLOAD SELESAI:
-      // Jalankan Installer .exe nya
-      Process.start(savePath, []);
+      // Jalankan Installer .exe nya dalam mode detached
+      // Tambahkan flag /VERYSILENT agar proses instalasi berjalan di background (tanpa klik Next-Next)
+      await Process.start(
+        savePath,
+        ['/VERYSILENT'],
+        mode: ProcessStartMode.detached,
+      );
       // Matikan aplikasi Flutter ini secara paksa (agar file lama tidak di-lock saat di-overwrite installer)
       exit(0);
 

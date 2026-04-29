@@ -34,4 +34,5 @@ Name: "{autoprograms}\Operation Core"; Filename: "{app}\operationcore2.exe"
 Name: "{autodesktop}\Operation Core"; Filename: "{app}\operationcore2.exe"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\operationcore2.exe"; Description: "{cm:LaunchProgram,Operation Core}"; Flags: nowait postinstall skipifsilent
+; Menjalankan aplikasi secara otomatis setelah selesai install, bahkan jika mode silent (/VERYSILENT)
+Filename: "{app}\operationcore2.exe"; Description: "{cm:LaunchProgram,Operation Core}"; Flags: nowait postinstall
