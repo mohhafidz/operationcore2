@@ -15,24 +15,24 @@ import 'package:operationcore2/services/sheets/target_sheet.dart';
 class ExportService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> exportRekapDashboard({
-    required DashboardData dashboardData,
+  Future<bool> exportRekapDashboard({
     required Databulansebelum dataBulanSebelum,
     required Datatahunsebelum dataTahunSebelum,
-    required int totalWorkingDays,
-    required int workingDay,
-    required int remainingWorkingDays,
     required List<alluser> mekanikUsers,
     required List<alluser> leaderUsers,
     required List<alluser> saUsers,
     required List<alluser> csUsers,
-    required Map<String, Map<String, dynamic>> productivityData,
-    required int mechanicTarget,
-    required int leaderTarget,
   }) async {
     final now = DateTime.now();
-    final String docId = "${now.year}-${now.month.toString().padLeft(2, '0')}";
-    final String monthName = DateFormat('MMMM yyyy').format(now);
+    int prevYear = now.year;
+    int prevMonth = now.month - 1;
+    if (prevMonth == 0) {
+      prevMonth = 12;
+      prevYear -= 1;
+    }
+    final prevDate = DateTime(prevYear, prevMonth, 1);
+    final String docId = "$prevYear-${prevMonth.toString().padLeft(2, '0')}";
+    final String monthName = DateFormat('MMMM yyyy').format(prevDate);
 
     // 0. FETCH TARGET DATA FIRST
     num TargetSiu = 0;
@@ -55,12 +55,27 @@ class ExportService {
     Map<String, dynamic> targetRev = {};
     Map<String, dynamic> targetHppMap = {};
 
+    List<DateTime> holidayDates = [];
+
+    int mechanicTarget = 0;
     try {
       final tDoc = await _firestore.collection('target').doc(docId).get();
       if (tDoc.exists) {
         targetBooking = tDoc.data()?['targetBooking'] ?? 0;
+        mechanicTarget = tDoc.data()?['targetmekanik'] ?? 0;
+        final holidaysList = tDoc.data()?['holidays'] as List<dynamic>? ?? [];
+        holidayDates = holidaysList.map((h) {
+          final parts = h.toString().split('-');
+          return DateTime(
+            int.parse(parts[0]),
+            int.parse(parts[1]),
+            int.parse(parts[2]),
+          );
+        }).toList();
       }
     } catch (_) {}
+
+    int leaderTarget = mechanicTarget * mekanikUsers.length;
 
     try {
       final tDocQuantity = await _firestore
@@ -115,6 +130,23 @@ class ExportService {
 
     // Fetch Data Harian
     final dailyData = await _fetchHarianData(docId, saUsers);
+
+    int totalDaysInMonth = DateTime(prevYear, prevMonth + 1, 0).day;
+    int totalWorkingDays = 0;
+    for (int i = 1; i <= totalDaysInMonth; i++) {
+      DateTime d = DateTime(prevYear, prevMonth, i);
+      if (d.weekday != DateTime.sunday &&
+          !holidayDates.any(
+            (hd) => hd.year == d.year && hd.month == d.month && hd.day == d.day,
+          )) {
+        totalWorkingDays++;
+      }
+    }
+    int workingDay = totalWorkingDays;
+    int remainingWorkingDays = 0;
+
+    final dashboardData = await _getDashboardDataForMonth(docId);
+    final productivityData = await _fetchProductivityData(docId);
 
     var excel = Excel.createExcel();
 
@@ -228,8 +260,98 @@ class ExportService {
         File(outputFile)
           ..createSync(recursive: true)
           ..writeAsBytesSync(fileBytes);
+        return true;
       }
     }
+    return false;
+  }
+
+  Future<DashboardData> _getDashboardDataForMonth(String monthId) async {
+    final targetRootSnap = await _firestore
+        .collection('target')
+        .doc(monthId)
+        .get();
+    final performanceSnap = await _firestore
+        .collection('saperformance')
+        .doc(monthId)
+        .get();
+
+    final avrgQuery = await _firestore
+        .collection('saperformance')
+        .doc(monthId)
+        .collection('daily')
+        .get();
+    final stQuery = await _firestore
+        .collection('saperformance')
+        .doc(monthId)
+        .collection('serviceTracking')
+        .get();
+
+    final root = targetRootSnap.data() ?? {};
+    final p = performanceSnap.data() ?? {};
+
+    final avrgDocs = avrgQuery.docs;
+    if (avrgDocs.isNotEmpty) {
+      avrgDocs.sort((a, b) => b.id.compareTo(a.id));
+    }
+    final avrg = avrgDocs.isNotEmpty ? avrgDocs.first.data() : {};
+
+    final stDocs = stQuery.docs;
+    if (stDocs.isNotEmpty) {
+      stDocs.sort((a, b) => b.id.compareTo(a.id));
+    }
+    final serviceTracking = stDocs.isNotEmpty ? stDocs.first.data() : {};
+
+    int getPenjualan(Map<String, dynamic> perf, String key) {
+      final penjualan = Map<String, dynamic>.from(perf['penjualan'] ?? {});
+      return penjualan[key] ?? 0;
+    }
+
+    double calculateProgress(int actual, int target) {
+      if (target == 0) return 0;
+      return (actual / target) * 100;
+    }
+
+    return DashboardData(
+      siuTarget: root['SIU'] ?? 0,
+      siuActual: p['totalUnitEntry'] ?? 0,
+      oilTarget: root['Oil'] ?? 0,
+      oilActual: getPenjualan(p, 'oil'),
+      partTarget: root['Part'] ?? 0,
+      partActual: getPenjualan(p, 'sPart'),
+      jasaTarget: root['Jasa'] ?? 0,
+      jasaActual: getPenjualan(p, 'lc'),
+      sorderTarget: root['SO'] ?? 0,
+      sorderActual: getPenjualan(p, 'sOrder'),
+      materialTarget: root['SM'] ?? 0,
+      materialActual: getPenjualan(p, 'sMaterial'),
+      bookingTarget: root['targetBooking'] ?? 0,
+      bookingActual: p['booking'] ?? 0,
+      totalTarget: root['total'] ?? 0,
+      totalActual: getPenjualan(p, 'total'),
+      siuAchv: calculateProgress(p['totalUnitEntry'] ?? 0, root['SIU'] ?? 0),
+      jasaAchv: calculateProgress(getPenjualan(p, 'lc'), root['Jasa'] ?? 0),
+      oilAchv: calculateProgress(getPenjualan(p, 'oil'), root['Oil'] ?? 0),
+      partAchv: calculateProgress(getPenjualan(p, 'sPart'), root['Part'] ?? 0),
+      soAchv: calculateProgress(getPenjualan(p, 'sOrder'), root['SO'] ?? 0),
+      smAchv: calculateProgress(getPenjualan(p, 'sMaterial'), root['SM'] ?? 0),
+      bookingAchv: calculateProgress(
+        p['booking'] ?? 0,
+        root['targetBooking'] ?? 0,
+      ),
+      totalAchv: calculateProgress(
+        getPenjualan(p, 'total'),
+        root['total'] ?? 0,
+      ),
+      dailySiu: avrg['totalUnitEntry'] ?? 0,
+      dailyJasa: avrg['lc'] ?? 0,
+      dailyOil: avrg['oil'] ?? 0,
+      dailyPart: avrg['sPart'] ?? 0,
+      dailySorder: avrg['sOrder'] ?? 0,
+      dailyMaterial: avrg['sMaterial'] ?? 0,
+      dailyTotal: avrg['totalPenjualan'] ?? 0,
+      dailyBooking: serviceTracking['booking'] ?? 0,
+    );
   }
 
   Future<Map<int, Map<String, dynamic>>> _fetchHarianData(
@@ -299,6 +421,22 @@ class ExportService {
     }
 
     return dailyMap;
+  }
+
+  Future<Map<String, Map<String, dynamic>>> _fetchProductivityData(
+    String docId,
+  ) async {
+    final snapshot = await _firestore
+        .collection('productivity')
+        .doc(docId)
+        .collection('detail')
+        .get();
+
+    final Map<String, Map<String, dynamic>> result = {};
+    for (var doc in snapshot.docs) {
+      result[doc.id] = doc.data();
+    }
+    return result;
   }
 
   Map<String, dynamic> _initialDailyData() {

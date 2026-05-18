@@ -129,6 +129,7 @@ class _TargetState extends ConsumerState<Target> {
   final RxBool isloading = false.obs;
   bool _isEditMode = false;
   bool _dataLoaded = false;
+  bool _hasDownloadedExcel = false;
 
   @override
   void initState() {
@@ -335,214 +336,216 @@ class _TargetState extends ConsumerState<Target> {
               ),
               child: Container(
                 padding: const EdgeInsets.all(24),
-                width: 650,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Confirm Target Benchmarks",
-                          style: GoogleFonts.plusJakartaSans(
-                            color: Colors.white,
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Icons.close, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    // Text(
-                    //   "REVIEWING SYSTEM PARAMETERS FOR V8 CORE OPTIMIZATION",
-                    //   style: GoogleFonts.plusJakartaSans(
-                    //     color: Colors.grey,
-                    //     fontSize: 12,
-                    //   ),
-                    // ),
-                    const SizedBox(height: 24),
-                    // WORKING DAYS SECTION
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                      ),
-                      child: Column(
+                constraints: const BoxConstraints(maxWidth: 650),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.calendar_today,
-                                color: Colors.blue,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 12),
-                              Text(
-                                "Informasi Hari Kerja",
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.blue,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                "$workingDays HARI",
-                                style: GoogleFonts.plusJakartaSans(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const Divider(height: 20, color: Colors.white10),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "Hari Libur: ",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 12,
-                                ),
-                              ),
-                              Expanded(
-                                child: Text(
-                                  holidays.isEmpty
-                                      ? "Tidak ada hari libur dipilih"
-                                      : holidays
-                                            .map(
-                                              (d) => DateFormat(
-                                                "dd MMM",
-                                              ).format(d),
-                                            )
-                                            .join(", "),
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      "CURRENT INPUT SUMMARY",
-                      style: GoogleFonts.plusJakartaSans(
-                        color: const Color(0xff00f2ff),
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: [
-                        _summaryCard("SIU TARGET", siu.toString()),
-                        _summaryCard("JASA", currencyFormatter.format(jasa)),
-                        _summaryCard("OIL", currencyFormatter.format(oil)),
-                        _summaryCard(
-                          "SPARE PART",
-                          currencyFormatter.format(part),
-                        ),
-                        _summaryCard("S/ORDER", currencyFormatter.format(so)),
-                        _summaryCard(
-                          "S/MATERIAL",
-                          currencyFormatter.format(sm),
-                        ),
-                        _summaryCard("CS TARGET", targetCSController.text),
-                        _summaryCard(
-                          "TOTAL PENJUALAN (Rp)",
-                          currencyFormatter.format(total),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 32),
-                    // MaterialBarChart(
-                    //   style: BarChartStyle(
-                    //     backgroundColor: Colors.transparent,
-                    //   ),
-                    //   data: [
-                    //     BarChartData(value: total.toDouble(), label: "Total"),
-                    //     BarChartData(
-                    //       value: targetCS.toDouble(),
-                    //       label: "Target CS",
-                    //     ),
-                    //   ],
-                    //   width: 300,
-                    //   height: 150,
-                    // ),
-                    const SizedBox(height: 32),
-                    // CHECKBOX SECTION
-                    Row(
-                      children: [
-                        Checkbox(
-                          value: isChecked,
-                          onChanged: (v) {
-                            setModalState(() {
-                              isChecked = v ?? false;
-                            });
-                          },
-                          side: const BorderSide(color: Colors.white54),
-                          activeColor: const Color(0xff00f2ff),
-                          checkColor: Colors.black,
-                        ),
-                        const Expanded(
-                          child: Text(
-                            "Saya mengkonfirmasi bahwa data target yang diisi sudah benar dan saya memahami bahwa data tidak dapat diubah kembali setelah disimpan.",
-                            style: TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text(
-                            "Batal",
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isChecked
-                                ? const Color(0xff00f2ff)
-                                : Colors.grey,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: isChecked
-                              ? () => Navigator.pop(context, true)
-                              : null,
-                          child: Text(
-                            "Simpan Sekarang",
-                            style: TextStyle(
-                              color: isChecked ? Colors.black : Colors.white60,
+                          Text(
+                            "Confirm Target Benchmarks",
+                            style: GoogleFonts.plusJakartaSans(
+                              color: Colors.white,
+                              fontSize: 24,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                      // Text(
+                      //   "REVIEWING SYSTEM PARAMETERS FOR V8 CORE OPTIMIZATION",
+                      //   style: GoogleFonts.plusJakartaSans(
+                      //     color: Colors.grey,
+                      //     fontSize: 12,
+                      //   ),
+                      // ),
+                      const SizedBox(height: 24),
+                      // WORKING DAYS SECTION
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
                         ),
-                      ],
-                    ),
-                  ],
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.calendar_today,
+                                  color: Colors.blue,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  "Informasi Hari Kerja",
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.blue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Text(
+                                  "$workingDays HARI",
+                                  style: GoogleFonts.plusJakartaSans(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Divider(height: 20, color: Colors.white10),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  "Hari Libur: ",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    holidays.isEmpty
+                                        ? "Tidak ada hari libur dipilih"
+                                        : holidays
+                                              .map(
+                                                (d) => DateFormat(
+                                                  "dd MMM",
+                                                ).format(d),
+                                              )
+                                              .join(", "),
+                                    style: const TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        "CURRENT INPUT SUMMARY",
+                        style: GoogleFonts.plusJakartaSans(
+                          color: const Color(0xff00f2ff),
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          _summaryCard("SIU TARGET", siu.toString()),
+                          _summaryCard("JASA", currencyFormatter.format(jasa)),
+                          _summaryCard("OIL", currencyFormatter.format(oil)),
+                          _summaryCard(
+                            "SPARE PART",
+                            currencyFormatter.format(part),
+                          ),
+                          _summaryCard("S/ORDER", currencyFormatter.format(so)),
+                          _summaryCard(
+                            "S/MATERIAL",
+                            currencyFormatter.format(sm),
+                          ),
+                          _summaryCard("CS TARGET", targetCSController.text),
+                          _summaryCard(
+                            "TOTAL PENJUALAN (Rp)",
+                            currencyFormatter.format(total),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                      // MaterialBarChart(
+                      //   style: BarChartStyle(
+                      //     backgroundColor: Colors.transparent,
+                      //   ),
+                      //   data: [
+                      //     BarChartData(value: total.toDouble(), label: "Total"),
+                      //     BarChartData(
+                      //       value: targetCS.toDouble(),
+                      //       label: "Target CS",
+                      //     ),
+                      //   ],
+                      //   width: 300,
+                      //   height: 150,
+                      // ),
+                      const SizedBox(height: 32),
+                      // CHECKBOX SECTION
+                      Row(
+                        children: [
+                          Checkbox(
+                            value: isChecked,
+                            onChanged: (v) {
+                              setModalState(() {
+                                isChecked = v ?? false;
+                              });
+                            },
+                            side: const BorderSide(color: Colors.white54),
+                            activeColor: const Color(0xff00f2ff),
+                            checkColor: Colors.black,
+                          ),
+                          const Expanded(
+                            child: Text(
+                              "Saya mengkonfirmasi bahwa data target yang diisi sudah benar dan saya memahami bahwa data tidak dapat diubah kembali setelah disimpan.",
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: const Text(
+                              "Batal",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: isChecked
+                                  ? const Color(0xff00f2ff)
+                                  : Colors.grey,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            onPressed: isChecked
+                                ? () => Navigator.pop(context, true)
+                                : null,
+                            child: Text(
+                              "Simpan Sekarang",
+                              style: TextStyle(
+                                color: isChecked ? Colors.black : Colors.white60,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -990,23 +993,28 @@ class _TargetState extends ConsumerState<Target> {
                             tahunSebelumAsync.hasValue) {
                           isloading.value = true;
                           try {
-                            await ExportService().exportRekapDashboard(
-                              dashboardData: dashboardAsync.value!,
+                            final success =
+                                await ExportService().exportRekapDashboard(
                               dataBulanSebelum: bulanSebelumAsync.value!,
                               dataTahunSebelum: tahunSebelumAsync.value!,
-                              totalWorkingDays: totalDays,
-                              workingDay: workingDay,
-                              remainingWorkingDays: remainingDays,
                               mekanikUsers: mekanikAsync.value ?? [],
                               leaderUsers: leaderAsync.value ?? [],
                               saUsers: saAsync.value ?? [],
                               csUsers: csAsync.value ?? [],
-                              productivityData: productivityAsync.value ?? {},
-                              mechanicTarget: targetMekanikAsync.value ?? 0,
-                              leaderTarget:
-                                  (targetMekanikAsync.value ?? 0) *
-                                  (mekanikAsync.value?.length ?? 0),
                             );
+                            if (success) {
+                              setState(() {
+                                _hasDownloadedExcel = true;
+                              });
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text("Export berhasil. Anda sekarang dapat menyimpan target."),
+                                    backgroundColor: Colors.green,
+                                  ),
+                                );
+                              }
+                            }
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -1038,6 +1046,34 @@ class _TargetState extends ConsumerState<Target> {
                       ontap: (isloading.value || _isEditMode)
                           ? null
                           : () async {
+                              final now = DateTime.now();
+                              int prevYear = now.year;
+                              int prevMonth = now.month - 1;
+                              if (prevMonth == 0) {
+                                prevMonth = 12;
+                                prevYear -= 1;
+                              }
+                              final String prevDocId =
+                                  "$prevYear-${prevMonth.toString().padLeft(2, '0')}";
+
+                              bool hasPreviousData = await ref
+                                  .read(targetRepositoryProvider)
+                                  .targetExists(prevDocId);
+
+                              if (hasPreviousData && !_hasDownloadedExcel) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        "Anda harus download Excel bulan kemarin (Export) terlebih dahulu sebelum bisa publish target.",
+                                      ),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
+                                }
+                                return;
+                              }
+
                               final confirm = await _showSummaryDialog(
                                 workingDays: workingDays,
                                 holidays: selectedHolidays,
