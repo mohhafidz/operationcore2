@@ -12,25 +12,28 @@ import 'package:operationcore2/page/login.dart';
 import 'package:window_manager/window_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:flutter/foundation.dart' show kIsWeb; // Tambahkan import ini
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // await clearFirestoreCache();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // 3. Inisialisasi Window Manager
-  await windowManager.ensureInitialized();
+  
+  // Hanya inisialisasi Window Manager jika dijalankan di platform non-Web (desktop)
+  if (!kIsWeb) {
+    await windowManager.ensureInitialized();
 
-  WindowOptions windowOptions = const WindowOptions(
-    minimumSize: Size(1300, 800),
-    center: true,
-    title: "Operations Core",
-  );
+    WindowOptions windowOptions = const WindowOptions(
+      minimumSize: Size(1300, 800),
+      center: true,
+      title: "Operations Core",
+    );
 
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
+    windowManager.waitUntilReadyToShow(windowOptions, () async {
+      await windowManager.show();
+      await windowManager.focus();
+    });
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }

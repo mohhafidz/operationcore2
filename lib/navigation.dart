@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
-import 'package:get/get_core/src/get_main.dart';
 import 'package:operationcore2/component/appcolor.dart';
 import 'package:operationcore2/component/text/texttitle.dart';
 import 'package:operationcore2/page/dashboard.dart';
@@ -25,6 +24,7 @@ class _NavigationState extends ConsumerState<Navigation> {
   final pages = [
     Dashboard(),
     Target(),
+    // TargetAchievement(),
     Productivity(),
     SAperformance(),
     Monitoringsa(),
@@ -37,12 +37,41 @@ class _NavigationState extends ConsumerState<Navigation> {
 
     // Define all possible menu items
     final allMenuItems = [
-      {'title': 'Dashboard', 'page': Dashboard(), 'roles': ['ADMIN', 'SA', 'CS']},
-      {'title': 'Targets', 'page': Target(), 'roles': ['ADMIN']},
-      {'title': 'Productivity', 'page': Productivity(), 'roles': ['ADMIN', 'SA', 'CS']},
-      {'title': 'SA Performance', 'page': SAperformance(), 'roles': ['SA']},
-      {'title': 'Monitoring SA', 'page': Monitoringsa(), 'roles': ['ADMIN', 'SA']},
-      {'title': 'User Management', 'page': UserManagement(), 'roles': ['ADMIN']},
+      {
+        'title': 'Dashboard',
+        'page': Dashboard(),
+        'roles': ['ADMIN', 'SA', 'CS'],
+      },
+      {
+        'title': 'Targets',
+        'page': Target(),
+        'roles': ['ADMIN'],
+      },
+      // {
+      //   'title': 'Target Achievement',
+      //   'page': TargetAchievement(),
+      //   'roles': ['ADMIN'],
+      // },
+      {
+        'title': 'Productivity',
+        'page': Productivity(),
+        'roles': ['ADMIN', 'SA', 'CS'],
+      },
+      {
+        'title': 'SA Performance',
+        'page': SAperformance(),
+        'roles': ['SA'],
+      },
+      {
+        'title': 'Monitoring SA',
+        'page': Monitoringsa(),
+        'roles': ['ADMIN', 'SA'],
+      },
+      {
+        'title': 'User Management',
+        'page': UserManagement(),
+        'roles': ['ADMIN'],
+      },
     ];
 
     // Filter menu items based on current user role
