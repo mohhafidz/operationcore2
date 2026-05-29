@@ -1,4 +1,5 @@
 import 'package:bcrypt/bcrypt.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:get/get.dart';
@@ -46,7 +47,9 @@ class _bodyState extends ConsumerState<body> {
     super.initState();
     _loadCredentials();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      AutoUpdater.checkForUpdates(context);
+      if (!kIsWeb) {
+        AutoUpdater.checkForUpdates(context);
+      }
     });
   }
 
@@ -63,7 +66,7 @@ class _bodyState extends ConsumerState<body> {
           password.text = savedPassword;
           check = true;
         });
-        
+
         // Auto-login logic
         _handleLogin(savedUsername, savedPassword);
       }
@@ -74,7 +77,7 @@ class _bodyState extends ConsumerState<body> {
     // Optional: add a small delay to let UI build
     await Future.delayed(const Duration(milliseconds: 500));
     if (!mounted) return;
-    
+
     final success = await ref.read(authProvider.notifier).login(u, p);
     if (success) {
       Get.offAllNamed("/home");

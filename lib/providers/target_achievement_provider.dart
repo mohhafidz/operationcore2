@@ -120,6 +120,8 @@ TargetAchievementUIState _processSAData({
   int totalSorder = 0;
   int totalSmaterial = 0;
 
+  final Map<int, Map<String, int>> weeklyAggregates = {};
+
   // Safe fallback targets in case target is null or empty
   final int targetSiuVal = _toInt(target?['SIU'] ?? 100);
   final int targetSiupersa = _toInt(target?['targetSiupersa'] ?? 33);
@@ -208,6 +210,33 @@ TargetAchievementUIState _processSAData({
     totalPenjualanGlobal += dayTotalPenjualan;
     totalHppGlobal += dayHpp;
 
+    final int weekNumber = ((d - 1) ~/ 7) + 1;
+    final weekAggregate = weeklyAggregates.putIfAbsent(
+      weekNumber,
+      () => {
+        'unitEntry': 0,
+        'jasa': 0,
+        'oil': 0,
+        'spart': 0,
+        'sorder': 0,
+        'sm': 0,
+        'totalPenjualan': 0,
+        'totalHpp': 0,
+        'profit': 0,
+      },
+    );
+
+    weekAggregate['unitEntry'] = weekAggregate['unitEntry']! + daySiu;
+    weekAggregate['jasa'] = weekAggregate['jasa']! + dayJasa;
+    weekAggregate['oil'] = weekAggregate['oil']! + dayOil;
+    weekAggregate['spart'] = weekAggregate['spart']! + dayPart;
+    weekAggregate['sorder'] = weekAggregate['sorder']! + daySo;
+    weekAggregate['sm'] = weekAggregate['sm']! + daySm;
+    weekAggregate['totalPenjualan'] =
+        weekAggregate['totalPenjualan']! + dayTotalPenjualan;
+    weekAggregate['totalHpp'] = weekAggregate['totalHpp']! + dayHpp;
+    weekAggregate['profit'] = weekAggregate['profit']! + dayProfit;
+
     // Daily total for the chart
     actualPoints.add(dayTotalPenjualan.toDouble());
 
@@ -278,6 +307,95 @@ TargetAchievementUIState _processSAData({
       ? (totalProfitGlobal / totalPenjualanGlobal) * 100
       : 0.0;
 
+  final List<Map<String, dynamic>> weeklyRows = [];
+  int totalWeeklyUnitEntry = 0;
+  int totalWeeklyJasa = 0;
+  int totalWeeklyOil = 0;
+  int totalWeeklySpart = 0;
+  int totalWeeklySorder = 0;
+  int totalWeeklySm = 0;
+  int totalWeeklyRevenue = 0;
+  int totalWeeklyProfit = 0;
+  double peakWeeklyMargin = 0.0;
+
+  for (var entry in weeklyAggregates.entries.toList()
+    ..sort((a, b) => a.key.compareTo(b.key))) {
+    final weekNumber = entry.key;
+    final data = entry.value;
+    final int weekRevenue = data['totalPenjualan']!;
+    final int weekHpp = data['totalHpp']!;
+    final int weekProfit = data['profit']!;
+    final double weekProfitPercent = weekRevenue > 0
+        ? (weekProfit / weekRevenue) * 100
+        : 0.0;
+
+    peakWeeklyMargin =
+        weekProfitPercent > peakWeeklyMargin ? weekProfitPercent : peakWeeklyMargin;
+
+    weeklyRows.add({
+      'week': 'W$weekNumber',
+      'unitEntry': data['unitEntry']!,
+      'jasa': currencyFormatter.format(data['jasa']!),
+      'oil': currencyFormatter.format(data['oil']!),
+      'spart': currencyFormatter.format(data['spart']!),
+      'sorder': currencyFormatter.format(data['sorder']!),
+      'sm': currencyFormatter.format(data['sm']!),
+      'totalPenjualan': currencyFormatter.format(weekRevenue),
+      'totalHpp': currencyFormatter.format(weekHpp),
+      'profit': currencyFormatter.format(weekProfit),
+      'profitPercent': "${weekProfitPercent.toStringAsFixed(0)}%",
+    });
+
+    totalWeeklyUnitEntry += data['unitEntry']!;
+    totalWeeklyJasa += data['jasa']!;
+    totalWeeklyOil += data['oil']!;
+    totalWeeklySpart += data['spart']!;
+    totalWeeklySorder += data['sorder']!;
+    totalWeeklySm += data['sm']!;
+    totalWeeklyRevenue += weekRevenue;
+    totalWeeklyProfit += weekProfit;
+  }
+
+  final int weekCount = weeklyRows.length;
+  final Map<String, dynamic> weeklyAverage = {
+    'week': 'AVG / WEEK',
+    'unitEntry': weekCount > 0 ? (totalWeeklyUnitEntry / weekCount).round() : 0,
+    'jasa': weekCount > 0
+        ? currencyFormatter.format((totalWeeklyJasa / weekCount).round())
+        : currencyFormatter.format(0),
+    'oil': weekCount > 0
+        ? currencyFormatter.format((totalWeeklyOil / weekCount).round())
+        : currencyFormatter.format(0),
+    'spart': weekCount > 0
+        ? currencyFormatter.format((totalWeeklySpart / weekCount).round())
+        : currencyFormatter.format(0),
+    'sorder': weekCount > 0
+        ? currencyFormatter.format((totalWeeklySorder / weekCount).round())
+        : currencyFormatter.format(0),
+    'sm': weekCount > 0
+        ? currencyFormatter.format((totalWeeklySm / weekCount).round())
+        : currencyFormatter.format(0),
+    'totalPenjualan': weekCount > 0
+        ? currencyFormatter.format((totalWeeklyRevenue / weekCount).round())
+        : currencyFormatter.format(0),
+    'profit': weekCount > 0
+        ? currencyFormatter.format((totalWeeklyProfit / weekCount).round())
+        : currencyFormatter.format(0),
+    'profitPercent': totalWeeklyRevenue > 0
+        ? "${((totalWeeklyProfit / totalWeeklyRevenue) * 100).toStringAsFixed(0)}%"
+        : '0%',
+  };
+
+  final Map<String, dynamic> weeklySummary = {
+    'avgNetProfit': weekCount > 0
+        ? currencyFormatter.format((totalWeeklyProfit / weekCount).round())
+        : currencyFormatter.format(0),
+    'avgMargin': totalWeeklyRevenue > 0
+        ? "${((totalWeeklyProfit / totalWeeklyRevenue) * 100).toStringAsFixed(0)}%"
+        : '0%',
+    'peakMargin': "${peakWeeklyMargin.toStringAsFixed(0)}%",
+  };
+
   final Map<String, dynamic> monthlyTotal = {
     'siu': totalSiu,
     'jasa': currencyFormatter.format(totalJasa),
@@ -314,5 +432,8 @@ TargetAchievementUIState _processSAData({
     targetPoints: const [],
     tableRows: dailyRows,
     monthlyTotal: monthlyTotal,
+    weeklyRows: weeklyRows,
+    weeklyAverage: weeklyAverage,
+    weeklySummary: weeklySummary,
   );
 }

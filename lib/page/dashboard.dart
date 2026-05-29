@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart'; // Sesuaikan nama package jika ada perbedaan kecil
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import 'package:operationcore2/page/dashboardoverall.dart';
 import 'package:operationcore2/page/target_achievement.dart';
 import 'package:operationcore2/providers/dashboard_provider.dart';
@@ -47,6 +48,19 @@ class _DashboardState extends ConsumerState<Dashboard>
     });
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          DateFormat("dd MMM yyyy").format(DateTime.now()).toUpperCase(),
+
+          style: GoogleFonts.plusJakartaSans(
+            color: Colors.white,
+            fontSize: 24,
+            fontWeight: FontWeight.bold,
+            letterSpacing: -0.5,
+          ),
+        ),
+        backgroundColor: Colors.transparent,
+      ),
       backgroundColor: const Color(0xFF0F172A), // Background gelap premium
       body: BottomBar(
         // 1. Konfigurasi Tata Letak (Layout)

@@ -6,6 +6,7 @@ import 'package:operationcore2/component/target_achievement/skeleton_loader.dart
 import 'package:operationcore2/component/target_achievement/target_achievement_header.dart';
 import 'package:operationcore2/component/target_achievement/revenue_trend_card.dart';
 import 'package:operationcore2/component/target_achievement/daily_transactions_card.dart';
+import 'package:operationcore2/component/target_achievement/weekly_performance_card.dart';
 import 'package:operationcore2/providers/target_achievement_provider.dart';
 
 class TargetAchievement extends ConsumerWidget {
@@ -54,6 +55,10 @@ class TargetAchievement extends ConsumerWidget {
 
                       // Daily Transactions Card
                       DailyTransactionsCard(saData: uiState),
+                      const SizedBox(height: 40.0),
+
+                      // Weekly Performance Card
+                      WeeklyPerformanceCard(saData: uiState),
                       const SizedBox(height: 40.0),
                     ],
                   ),
