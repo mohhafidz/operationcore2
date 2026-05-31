@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_floating_bottom_bar/flutter_floating_bottom_bar.dart'; // Sesuaikan nama package jika ada perbedaan kecil
@@ -6,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:operationcore2/page/dashboardoverall.dart';
 import 'package:operationcore2/page/target_achievement.dart';
 import 'package:operationcore2/providers/dashboard_provider.dart';
+import 'package:operationcore2/utils/auto_updater.dart';
 
 class Dashboard extends ConsumerStatefulWidget {
   const Dashboard({super.key});
@@ -28,6 +30,12 @@ class _DashboardState extends ConsumerState<Dashboard>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final workingDay = ref.read(workingDayProvider);
       _dayController.text = workingDay.toString();
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!kIsWeb) {
+        AutoUpdater.checkForUpdates(context);
+      }
     });
   }
 

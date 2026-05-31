@@ -104,6 +104,7 @@ TargetAchievementUIState _processSAData({
 
   // Daily actual revenues for the chart
   final List<double> actualPoints = [];
+  final List<String> chartLabels = [];
 
   // Monthly totals
   int totalSiu = 0;
@@ -129,6 +130,12 @@ TargetAchievementUIState _processSAData({
       ? _toInt(target?['working_days'] ?? 26)
       : 26;
 
+  final List<String> holidayStrings =
+      (target?['holidays'] as List<dynamic>?)
+          ?.map((h) => h.toString())
+          .toList() ??
+      [];
+
   final int saTargetSiu = selectedSA == 'Semua SA'
       ? targetSiuVal
       : targetSiupersa;
@@ -140,6 +147,13 @@ TargetAchievementUIState _processSAData({
     final String dateKey = "${now.year}-$monthStr-$dayStr";
     final String displayDate =
         "$dayStr ${DateFormat('MMM').format(now)} ${now.year}";
+
+    final currentDate = DateTime(now.year, now.month, d);
+    final String activeDateKey =
+        "${currentDate.year}-${currentDate.month}-${currentDate.day}";
+    final bool isSunday = currentDate.weekday == DateTime.sunday;
+    final bool isHoliday = holidayStrings.contains(activeDateKey);
+    final bool isWorkingDay = !isSunday && !isHoliday;
 
     int daySiu = 0;
     int dayJasa = 0;
@@ -238,7 +252,10 @@ TargetAchievementUIState _processSAData({
     weekAggregate['profit'] = weekAggregate['profit']! + dayProfit;
 
     // Daily total for the chart
-    actualPoints.add(dayTotalPenjualan.toDouble());
+    if (isWorkingDay) {
+      actualPoints.add(dayTotalPenjualan.toDouble());
+      chartLabels.add("$dayStr ${DateFormat('MMM').format(now).toUpperCase()}");
+    }
 
     // Decide SIU State
     String siuState = 'normal';
@@ -318,8 +335,9 @@ TargetAchievementUIState _processSAData({
   int totalWeeklyProfit = 0;
   double peakWeeklyMargin = 0.0;
 
-  for (var entry in weeklyAggregates.entries.toList()
-    ..sort((a, b) => a.key.compareTo(b.key))) {
+  for (var entry
+      in weeklyAggregates.entries.toList()
+        ..sort((a, b) => a.key.compareTo(b.key))) {
     final weekNumber = entry.key;
     final data = entry.value;
     final int weekRevenue = data['totalPenjualan']!;
@@ -329,8 +347,9 @@ TargetAchievementUIState _processSAData({
         ? (weekProfit / weekRevenue) * 100
         : 0.0;
 
-    peakWeeklyMargin =
-        weekProfitPercent > peakWeeklyMargin ? weekProfitPercent : peakWeeklyMargin;
+    peakWeeklyMargin = weekProfitPercent > peakWeeklyMargin
+        ? weekProfitPercent
+        : peakWeeklyMargin;
 
     weeklyRows.add({
       'week': 'W$weekNumber',
@@ -429,6 +448,7 @@ TargetAchievementUIState _processSAData({
     totalRevenueStr: totalRevenueStr,
     trendPercentage: trendPercentage,
     chartPoints: actualPoints,
+    chartLabels: chartLabels,
     targetPoints: const [],
     tableRows: dailyRows,
     monthlyTotal: monthlyTotal,

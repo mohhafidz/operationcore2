@@ -20,7 +20,6 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
   int? _hoveredIndex;
   double? _hoveredX;
 
-
   @override
   void initState() {
     super.initState();
@@ -56,6 +55,11 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
 
   @override
   Widget build(BuildContext context) {
+    final currentRevenue = widget.saData.chartPoints.isNotEmpty
+        ? widget.saData.chartPoints[_hoveredIndex ??
+              (widget.saData.chartPoints.length - 1)]
+        : 0.0;
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -96,15 +100,17 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
                     crossAxisAlignment: CrossAxisAlignment.baseline,
                     textBaseline: TextBaseline.alphabetic,
                     children: [
-                          Text(
-                            NumberFormat.currency(symbol: "Rp", decimalDigits: 0).format(
-                                widget.saData.chartPoints[_hoveredIndex ?? (widget.saData.chartPoints.length - 1)]),
-                            style: GoogleFonts.plusJakartaSans(
-                              color: const Color(0xFF38BDF8),
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                      Text(
+                        NumberFormat.currency(
+                          symbol: "Rp",
+                          decimalDigits: 0,
+                        ).format(currentRevenue),
+                        style: GoogleFonts.plusJakartaSans(
+                          color: const Color(0xFF38BDF8),
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(width: 8.0),
                       Text(
                         widget.saData.trendPercentage,
@@ -127,7 +133,6 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
                     isDotted: false,
                   ),
                   const SizedBox(width: 24.0),
-                  
                 ],
               ),
             ],
@@ -161,14 +166,7 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                (() {
-                                  final now = DateTime.now();
-                                  final day = _hoveredIndex! + 1;
-                                  final month = DateFormat(
-                                    'MMM',
-                                  ).format(now).toUpperCase();
-                                  return "${day.toString().padLeft(2, '0')} $month";
-                                })(),
+                                widget.saData.chartLabels[_hoveredIndex!],
                                 style: GoogleFonts.inter(
                                   color: Colors.white,
                                   fontSize: 10,
@@ -181,7 +179,10 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
                                   decimalDigits: 0,
                                 ).format(
                                   (() {
-                                    final idx = _hoveredIndex!.clamp(0, widget.saData.chartPoints.length - 1);
+                                    final idx = _hoveredIndex!.clamp(
+                                      0,
+                                      widget.saData.chartPoints.length - 1,
+                                    );
                                     return widget.saData.chartPoints[idx];
                                   })(),
                                 ),
@@ -198,32 +199,36 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
                     ),
                   ],
                   // Chart with hover detection
-                      MouseRegion(
-                        onHover: (event) {
-                          final local = event.localPosition;
-                          final dx = local.dx.clamp(0.0, chartWidth);
-                          final pointsCount = widget.saData.chartPoints.length;
-                          int index = (dx / chartWidth * pointsCount).floor();
-                          if (index < 0) index = 0;
-                          if (index >= pointsCount) index = pointsCount - 1;
-                          setState(() {
-                            _hoveredIndex = index;
-                            _hoveredX = dx;
-                          });
-                        },
-                        onExit: (_) => setState(() => _hoveredIndex = null),
-                        child: SizedBox(
-                          height: 260.0,
-                          width: double.infinity,
-                          child: CustomPaint(
-                            painter: RevenueChartPainter(
-                              actualPoints: widget.saData.chartPoints,
-                              animationValue: _chartAnimation.value,
-                              hoveredIndex: _hoveredIndex,
-                            ),
-                          ),
+                  MouseRegion(
+                    onHover: (event) {
+                      final local = event.localPosition;
+                      final dx = local.dx.clamp(0.0, chartWidth);
+                      final pointsCount = widget.saData.chartPoints.length;
+                      final stepX = pointsCount > 1
+                          ? chartWidth / (pointsCount - 1)
+                          : chartWidth;
+                      int index = (dx / stepX).round();
+                      if (index < 0) index = 0;
+                      if (index >= pointsCount) index = pointsCount - 1;
+                      setState(() {
+                        _hoveredIndex = index;
+                        _hoveredX = (index * stepX).clamp(0.0, chartWidth);
+                      });
+                    },
+                    onExit: (_) => setState(() => _hoveredIndex = null),
+                    child: SizedBox(
+                      height: 260.0,
+                      width: double.infinity,
+                      child: CustomPaint(
+                        painter: RevenueChartPainter(
+                          actualPoints: widget.saData.chartPoints,
+                          animationValue: _chartAnimation.value,
+                          hoveredIndex: _hoveredIndex,
                         ),
-                      ),],
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -344,8 +349,6 @@ class RevenueChartPainter extends CustomPainter {
       if (p > maxVal) maxVal = p;
     }
     maxVal *= 1.15; // Give 15% breathing room at the top
-
-    
 
     // 2. Draw Actual Revenue Trend Line with Smooth Bezier Curves
     final actualPath = Path();

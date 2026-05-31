@@ -4,6 +4,7 @@ class TargetAchievementUIState {
   final String totalRevenueStr;
   final String trendPercentage;
   final List<double> chartPoints;
+  final List<String> chartLabels;
   final List<double> targetPoints;
   final List<Map<String, dynamic>> tableRows;
   final Map<String, dynamic> monthlyTotal;
@@ -17,6 +18,7 @@ class TargetAchievementUIState {
     required this.totalRevenueStr,
     required this.trendPercentage,
     required this.chartPoints,
+    required this.chartLabels,
     required this.targetPoints,
     required this.tableRows,
     required this.monthlyTotal,

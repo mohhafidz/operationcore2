@@ -46,11 +46,11 @@ class _bodyState extends ConsumerState<body> {
   void initState() {
     super.initState();
     _loadCredentials();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!kIsWeb) {
-        AutoUpdater.checkForUpdates(context);
-      }
-    });
+    // WidgetsBinding.instance.addPostFrameCallback((_) {
+    //   if (!kIsWeb) {
+    //     AutoUpdater.checkForUpdates(context);
+    //   }
+    // });
   }
 
   Future<void> _loadCredentials() async {
