@@ -281,17 +281,29 @@ class _RevenueTrendCardState extends State<RevenueTrendCard>
   }
 
   Widget _buildTimelineLabels() {
-    final now = DateTime.now();
-    final totalDays = DateTime(now.year, now.month + 1, 0).day;
-    final monthShort = DateFormat('MMM').format(now).toUpperCase();
+    final labels = widget.saData.chartLabels;
+    if (labels.isEmpty) return const SizedBox.shrink();
 
-    final List<int> days = [1, 5, 10, 15, 20, 25, now.day];
+    final List<String> visibleLabels;
+    if (labels.length <= 5) {
+      visibleLabels = labels;
+    } else {
+      final int lastIndex = labels.length - 1;
+      final positions = [
+        0,
+        (labels.length * 1 ~/ 4).clamp(0, lastIndex),
+        (labels.length * 2 ~/ 4).clamp(0, lastIndex),
+        (labels.length * 3 ~/ 4).clamp(0, lastIndex),
+        lastIndex,
+      ];
+      visibleLabels = positions.map((idx) => labels[idx]).toSet().toList();
+    }
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: days.map((day) {
-        final dayStr = day.toString().padLeft(2, '0');
+      children: visibleLabels.map((label) {
         return Text(
-          "$dayStr $monthShort",
+          label,
           style: GoogleFonts.inter(
             color: const Color(0xFF475569),
             fontSize: 10,
